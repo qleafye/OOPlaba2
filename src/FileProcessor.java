@@ -23,7 +23,7 @@ public class FileProcessor {
                 DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
                 DocumentBuilder builder = factory.newDocumentBuilder();
                 Document document = builder.parse(new File(path));
-                document.getDocumentElement().normalize();
+                document.getDocumentElement().normalize(); // Нормализуем XML-документ
 
                 NodeList nodeList = document.getElementsByTagName("item");
 
@@ -35,8 +35,25 @@ public class FileProcessor {
                         Element element = (Element) node;
                         String city = element.getAttribute("city");
                         String street = element.getAttribute("street");
-                        int house = Integer.parseInt(element.getAttribute("house"));
-                        int floor = Integer.parseInt(element.getAttribute("floor"));
+
+                        // Получаем атрибуты и проверяем на пустые строки
+                        String houseStr = element.getAttribute("house");
+                        String floorStr = element.getAttribute("floor");
+
+                        // Преобразуем в int только если значение корректно
+                        int house = 0;
+                        int floor = 0;
+                        try {
+                            if (!houseStr.isEmpty()) {
+                                house = Integer.parseInt(houseStr);
+                            }
+                            if (!floorStr.isEmpty()) {
+                                floor = Integer.parseInt(floorStr);
+                            }
+                        } catch (NumberFormatException e) {
+                            System.out.println("Некорректные данные: house = " + houseStr + ", floor = " + floorStr);
+                            continue; // Пропустить этот элемент, если данные некорректны
+                        }
 
                         // Формируем строку для поиска дубликатов
                         String record = city + "," + street + "," + house;
@@ -59,8 +76,16 @@ public class FileProcessor {
 
                     String city = tempValues[0];
                     String street = tempValues[1];
-                    int house = Integer.parseInt(tempValues[2]);
-                    int floor = Integer.parseInt(tempValues[3]);
+                    int house = 0;
+                    int floor = 0;
+
+                    try {
+                        house = Integer.parseInt(tempValues[2]);
+                        floor = Integer.parseInt(tempValues[3]);
+                    } catch (NumberFormatException e) {
+                        System.out.println("Некорректные данные в CSV: house = " + tempValues[2] + ", floor = " + tempValues[3]);
+                        continue; // Пропустить эту строку, если данные некорректны
+                    }
 
                     // Формируем строку для поиска дубликатов
                     String record = city + "," + street + "," + house;
@@ -84,5 +109,26 @@ public class FileProcessor {
     }
 
 
+
+public static void main(String[] args) {
+    Scanner scanner = new Scanner(System.in);
+    while (true) {
+        System.out.println("Введите путь до файла-справочника или '0' для завершения:");
+        String filePath = scanner.nextLine();
+
+        if (filePath.equalsIgnoreCase("0")) {
+            System.out.println("Завершение программы.");
+            break;
+        }
+
+        FileProcessor processor = new FileProcessor();
+        long startTime = System.currentTimeMillis();
+        processor.processFile(filePath);
+        long endTime = System.currentTimeMillis();
+        System.out.println("Время работы " + (endTime - startTime) + "ms");
+
+    }
 }
+}
+
 
